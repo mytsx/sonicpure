@@ -1,0 +1,16 @@
+# Core audio processing
+numpy>=1.20.0
+scipy>=1.7.0
+soundfile>=0.11.0
+
+# Noise reduction engines
+noisereduce>=3.0.0
+pyrnnoise>=0.4.0
+speechbrain>=1.0.0
+
+# Deep learning (required by SpeechBrain)
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# Utilities
+tqdm>=4.60.0

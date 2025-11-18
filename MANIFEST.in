@@ -1,0 +1,18 @@
+# Include documentation
+include README.md
+include LICENSE
+include requirements.txt
+include prd.md
+
+# Include test files
+include test_*.py
+include audio_analyzer.py
+include audio_normalizer.py
+include silence_trimmer.py
+include clean_audio.py
+
+# Exclude development files
+exclude .gitignore
+recursive-exclude output_tests *
+recursive-exclude pretrained_models *
+exclude *.wav
