@@ -23,7 +23,7 @@ if requirements_file.exists():
 
 setup(
     name="sonicpure",
-    version="0.1.0",
+    version="0.1.1",
     author="Mehmet Yerli",
     author_email="iletisim@mehmetyerli.com.tr",
     description="Audio noise reduction and enhancement library with multiple engines",
