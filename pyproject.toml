@@ -3,14 +3,14 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "gurultu"
+name = "sonicpure"
 version = "0.1.0"
 description = "Audio noise reduction and enhancement library with multiple engines"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Mehmet Yerli", email = "iletisim@mehmetyerli.com"}
+    {name = "Mehmet Yerli", email = "iletisim@mehmetyerli.com.tr"}
 ]
 keywords = [
     "audio",
@@ -57,12 +57,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mehmetyerli/gurultu"
-Repository = "https://github.com/mehmetyerli/gurultu"
-"Bug Tracker" = "https://github.com/mehmetyerli/gurultu/issues"
+Homepage = "https://github.com/mehmetyerli/sonicpure"
+Repository = "https://github.com/mehmetyerli/sonicpure"
+"Bug Tracker" = "https://github.com/mehmetyerli/sonicpure/issues"
 
 [project.scripts]
-gurultu = "clean_audio:main"
+sonicpure = "clean_audio:main"
 
 [tool.black]
 line-length = 100

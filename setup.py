@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gürültü - Audio Noise Reduction & Enhancement Library
+SonicPure - Audio Noise Reduction & Enhancement Library
 Setup configuration
 """
 
@@ -22,14 +22,14 @@ if requirements_file.exists():
     ]
 
 setup(
-    name="gurultu",
+    name="sonicpure",
     version="0.1.0",
     author="Mehmet Yerli",
-    author_email="iletisim@mehmetyerli.com",
+    author_email="iletisim@mehmetyerli.com.tr",
     description="Audio noise reduction and enhancement library with multiple engines",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mehmetyerli/gurultu",
+    url="https://github.com/mehmetyerli/sonicpure",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -57,7 +57,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "gurultu=clean_audio:main",
+            "sonicpure=clean_audio:main",
         ],
     },
     include_package_data=True,

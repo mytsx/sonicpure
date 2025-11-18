@@ -1,4 +1,4 @@
-# Gürültü 🎙️
+# SonicPure 🎙️
 
 **Audio Noise Reduction & Enhancement Library**
 
@@ -48,7 +48,7 @@ pip install .
 pip install -r requirements.txt
 
 # Kütüphaneyi Python path'ine ekle
-export PYTHONPATH="${PYTHONPATH}:/path/to/gurultu"
+export PYTHONPATH="${PYTHONPATH}:/path/to/sonicpure"
 ```
 
 ## 🚀 Hızlı Başlangıç
@@ -75,7 +75,7 @@ python clean_audio.py input.wav output.wav --no-normalize
 ### Python Kütüphanesi Olarak
 
 ```python
-from gurultu import AudioPipeline
+from sonicpure import AudioPipeline
 
 # Basit kullanım
 pipeline = AudioPipeline()
@@ -89,7 +89,7 @@ print(f"Saved: {result['time_saved']:.2f}s")
 ### İleri Seviye Örnekler
 
 ```python
-from gurultu import AudioPipeline
+from sonicpure import AudioPipeline
 
 # Özelleştirilmiş pipeline
 pipeline = AudioPipeline(
@@ -111,8 +111,8 @@ print(f"Time saved: {result['time_saved']:.2f}s ({result['time_saved']/result['o
 ### Motorları Ayrı Ayrı Kullanma
 
 ```python
-from gurultu.engines import SpeechBrainEngine, RNNoiseEngine, NoiseReduceEngine
-from gurultu.processors import SilenceTrimmer, AudioNormalizer
+from sonicpure.engines import SpeechBrainEngine, RNNoiseEngine, NoiseReduceEngine
+from sonicpure.processors import SilenceTrimmer, AudioNormalizer
 
 # Sadece gürültü temizleme
 engine = SpeechBrainEngine()
@@ -176,8 +176,8 @@ Gerçek TTS ses dosyaları üzerinde test edildi:
 ## 📁 Proje Yapısı
 
 ```
-gurultu/
-├── gurultu/                 # Ana kütüphane
+sonicpure/
+├── sonicpure/               # Ana kütüphane
 │   ├── __init__.py         # Paket tanımı
 │   ├── engines.py          # Gürültü temizleme motorları
 │   ├── processors.py       # Trimmer & Normalizer
@@ -213,9 +213,9 @@ MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
 ## 📧 İletişim
 
-Mehmet Yerli - iletisim@mehmetyerli.com
+Mehmet Yerli - iletisim@mehmetyerli.com.tr
 
-Proje Linki: [https://github.com/mehmetyerli/gurultu](https://github.com/mehmetyerli/gurultu)
+Proje Linki: [https://github.com/mehmetyerli/sonicpure](https://github.com/mehmetyerli/sonicpure)
 
 ---
 

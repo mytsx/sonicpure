@@ -6,15 +6,15 @@
 
 ```bash
 # requirements.txt'e ekle:
-git+ssh://git@github.com/mehmetyerli/gurultu.git
+git+ssh://git@github.com/mehmetyerli/sonicpure.git
 
 # Veya belirli bir versiyon:
-git+ssh://git@github.com/mehmetyerli/gurultu.git@v0.1.0
+git+ssh://git@github.com/mehmetyerli/sonicpure.git@v0.1.0
 ```
 
 **Python kodunda:**
 ```python
-from gurultu import AudioPipeline
+from sonicpure import AudioPipeline
 
 pipeline = AudioPipeline()
 result = pipeline.process("input.wav", "output.wav")
@@ -26,26 +26,26 @@ Aynı makinede birden fazla proje geliştiriyorsanız:
 
 ```bash
 # Diğer projenin requirements.txt:
--e /Users/yerli/Developer/tools/gurultu
+-e /Users/yerli/Developer/tools/sonicpure
 
 # Veya direkt kurulum:
 cd /path/to/other/project
-pip install -e /Users/yerli/Developer/tools/gurultu
+pip install -e /Users/yerli/Developer/tools/sonicpure
 ```
 
 ### Seçenek 3: PyPI (Public)
 
 ```bash
 # PyPI'ye publish ettikten sonra:
-pip install gurultu
+pip install sonicpure
 ```
 
 ## GitHub'a Push
 
 ```bash
-# 1. GitHub'da private repo oluştur
+# 1. GitHub'da public repo oluştur
 # 2. Remote ekle ve push et
-git remote add origin git@github.com:mehmetyerli/gurultu.git
+git remote add origin git@github.com:mehmetyerli/sonicpure.git
 git push -u origin main
 
 # Tag oluştur (versiyonlama)
@@ -55,31 +55,31 @@ git push origin v0.1.0
 
 ## requirements.txt Örnekleri
 
-### GitHub Private Repo
+### GitHub Public Repo
 ```txt
 # requirements.txt
 numpy>=1.20.0
 scipy>=1.7.0
-git+ssh://git@github.com/mehmetyerli/gurultu.git@v0.1.0
+git+ssh://git@github.com/mehmetyerli/sonicpure.git@v0.1.0
 ```
 
 ### Local Development
 ```txt
 # requirements.txt
--e /Users/yerli/Developer/tools/gurultu
+-e /Users/yerli/Developer/tools/sonicpure
 ```
 
 ### PyPI
 ```txt
 # requirements.txt
-gurultu==0.1.0
+sonicpure==0.1.0
 ```
 
 ## Kullanım Örneği
 
 ```python
 # my_other_project/main.py
-from gurultu import AudioPipeline
+from sonicpure import AudioPipeline
 
 def process_audio(input_file):
     pipeline = AudioPipeline(
@@ -102,10 +102,10 @@ clean_audio = process_audio("recording.wav")
 ### Import hatası alıyorsanız:
 ```bash
 # Paketin kurulu olduğunu kontrol edin
-pip list | grep gurultu
+pip list | grep sonicpure
 
 # Yoksa tekrar kurun
-pip install -e /path/to/gurultu
+pip install -e /path/to/sonicpure
 ```
 
 ### GitHub private repo authentication:
