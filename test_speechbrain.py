@@ -10,6 +10,7 @@ import soundfile as sf
 from pathlib import Path
 import time
 import torch
+from scipy import signal
 
 def clean_with_speechbrain(input_file: str, output_file: str):
     """
@@ -27,13 +28,33 @@ def clean_with_speechbrain(input_file: str, output_file: str):
     print(f"[SpeechBrain] Loading audio: {input_file}")
 
     # Ses dosyasını yükle
-    data, rate = sf.read(input_file)
-    print(f"[SpeechBrain] Sample rate: {rate} Hz")
-    print(f"[SpeechBrain] Duration: {len(data)/rate:.2f} seconds")
+    data, original_rate = sf.read(input_file)
+    print(f"[SpeechBrain] Original sample rate: {original_rate} Hz")
+    print(f"[SpeechBrain] Duration: {len(data)/original_rate:.2f} seconds")
     print(f"[SpeechBrain] Channels: {data.shape[1] if len(data.shape) > 1 else 1}")
 
     # Başlangıç zamanı
     start_time = time.time()
+
+    # MetricGAN+ modeli 16kHz için eğitilmiş
+    MODEL_SAMPLE_RATE = 16000
+
+    # Eğer dosya farklı sample rate'deyse, 16kHz'e resample et
+    temp_file = None
+    if original_rate != MODEL_SAMPLE_RATE:
+        print(f"[SpeechBrain] Resampling {original_rate} Hz -> {MODEL_SAMPLE_RATE} Hz...")
+
+        # Resample
+        num_samples = int(len(data) * MODEL_SAMPLE_RATE / original_rate)
+        data_resampled = signal.resample(data, num_samples)
+
+        # Geçici dosya oluştur
+        temp_file = Path(output_file).parent / "temp_16khz.wav"
+        sf.write(temp_file, data_resampled, MODEL_SAMPLE_RATE)
+        input_to_process = str(temp_file)
+        print(f"[SpeechBrain] Temporary 16kHz file created")
+    else:
+        input_to_process = input_file
 
     # SpeechBrain modelini yükle (enhancement için)
     print(f"[SpeechBrain] Loading pre-trained model...")
@@ -50,10 +71,10 @@ def clean_with_speechbrain(input_file: str, output_file: str):
         )
 
         print(f"[SpeechBrain] Model loaded!")
-        print(f"[SpeechBrain] Processing audio...")
+        print(f"[SpeechBrain] Processing audio at {MODEL_SAMPLE_RATE} Hz...")
 
         # Enhance audio
-        enhanced = enhancer.enhance_file(input_file)
+        enhanced = enhancer.enhance_file(input_to_process)
 
         # Tensor'dan numpy'a çevir
         if torch.is_tensor(enhanced):
@@ -63,24 +84,41 @@ def clean_with_speechbrain(input_file: str, output_file: str):
         if len(enhanced.shape) > 1:
             enhanced = enhanced.squeeze()
 
+        # Eğer resampling yaptıysak, çıktıyı tekrar orijinal sample rate'e döndür
+        if original_rate != MODEL_SAMPLE_RATE:
+            print(f"[SpeechBrain] Resampling output {MODEL_SAMPLE_RATE} Hz -> {original_rate} Hz...")
+            num_samples_original = int(len(enhanced) * original_rate / MODEL_SAMPLE_RATE)
+            enhanced = signal.resample(enhanced, num_samples_original)
+
+            # Geçici dosyayı sil
+            if temp_file and temp_file.exists():
+                temp_file.unlink()
+                print(f"[SpeechBrain] Temporary file deleted")
+
         elapsed = time.time() - start_time
         print(f"[SpeechBrain] Processing completed in {elapsed:.2f} seconds")
 
-        # Sonucu kaydet
-        print(f"[SpeechBrain] Saving to: {output_file}")
-        sf.write(output_file, enhanced, rate)
+        # Sonucu kaydet (orijinal sample rate'de)
+        print(f"[SpeechBrain] Saving to: {output_file} at {original_rate} Hz")
+        sf.write(output_file, enhanced, original_rate)
 
         return {
             'engine': 'SpeechBrain (MetricGAN+)',
             'input_file': input_file,
             'output_file': output_file,
-            'sample_rate': rate,
+            'sample_rate': original_rate,
             'processing_time': elapsed
         }
 
     except Exception as e:
         print(f"[SpeechBrain] ERROR: {e}")
         print(f"[SpeechBrain] Model yüklenemedi veya işlem başarısız")
+
+        # Geçici dosyayı temizle
+        if temp_file and temp_file.exists():
+            temp_file.unlink()
+            print(f"[SpeechBrain] Temporary file cleaned up")
+
         return None
 
 

@@ -8,8 +8,9 @@ import numpy as np
 import soundfile as sf
 from pathlib import Path
 import time
+from scipy import signal
 
-def clean_with_rnnoise(input_file: str, output_file: str):
+def clean_with_rnnoise(input_file: str, output_file: str, apply_smoothing: bool = True):
     """
     RNNoise kullanarak ses dosyasını temizle (pyrnnoise kullanarak)
 
@@ -76,6 +77,22 @@ def clean_with_rnnoise(input_file: str, output_file: str):
     # Float'a çevir
     reduced_noise = reduced_noise_int16.astype(np.float32) / 32767.0
 
+    # Frame geçişlerindeki keskin sesleri (artifacts) gidermek için smoothing uygula
+    if apply_smoothing:
+        print(f"[RNNoise] Applying smoothing to remove frame artifacts...")
+
+        # Savitzky-Golay filter ile yumuşak geçişler
+        # window_length küçük olmalı ki ses kalitesi bozulmasın
+        window_length = 11  # Küçük pencere (11 sample ~ 0.5ms at 24kHz)
+        polyorder = 3
+
+        # Eğer window_length ses uzunluğundan büyükse ayarla
+        if len(reduced_noise) < window_length:
+            window_length = len(reduced_noise) if len(reduced_noise) % 2 == 1 else len(reduced_noise) - 1
+
+        reduced_noise = signal.savgol_filter(reduced_noise, window_length, polyorder)
+        print(f"[RNNoise] Smoothing applied (window={window_length})")
+
     elapsed = time.time() - start_time
     print(f"[RNNoise] Processing completed in {elapsed:.2f} seconds")
 
@@ -88,7 +105,8 @@ def clean_with_rnnoise(input_file: str, output_file: str):
         'input_file': input_file,
         'output_file': output_file,
         'sample_rate': rate,
-        'processing_time': elapsed
+        'processing_time': elapsed,
+        'smoothing': apply_smoothing
     }
 
 
@@ -101,21 +119,45 @@ if __name__ == "__main__":
     output_dir.mkdir(exist_ok=True)
 
     print("=" * 60)
-    print("RNNOISE TEST")
+    print("RNNOISE TEST - SMOOTHING COMPARISON")
     print("=" * 60)
     print()
 
-    result = clean_with_rnnoise(
-        input_wav,
-        str(output_dir / "rnnoise_cleaned.wav")
-    )
+    results = []
 
-    if result:
+    # 1. Smoothing OLMADAN (orijinal - çıt pıt sesleri olabilir)
+    print("\n### Test 1: Without Smoothing (may have artifacts)")
+    result1 = clean_with_rnnoise(
+        input_wav,
+        str(output_dir / "rnnoise_no_smoothing.wav"),
+        apply_smoothing=False
+    )
+    results.append(result1)
+
+    # 2. Smoothing İLE (frame geçişleri yumuşak)
+    print("\n### Test 2: With Smoothing (smooth frame transitions)")
+    result2 = clean_with_rnnoise(
+        input_wav,
+        str(output_dir / "rnnoise_with_smoothing.wav"),
+        apply_smoothing=True
+    )
+    results.append(result2)
+
+    if all(results):
         print("\n" + "=" * 60)
         print("RESULTS SUMMARY")
         print("=" * 60)
-        print(f"\nEngine: {result['engine']}")
-        print(f"Output: {result['output_file']}")
-        print(f"Sample rate: {result['sample_rate']} Hz")
-        print(f"Processing time: {result['processing_time']:.2f}s")
-        print("\n✓ Dosyayı dinleyip karşılaştırabilirsiniz!")
+
+        for i, result in enumerate(results, 1):
+            smoothing_status = "WITH smoothing" if result['smoothing'] else "WITHOUT smoothing"
+            print(f"\n{i}. {smoothing_status}:")
+            print(f"   Output: {result['output_file']}")
+            print(f"   Time: {result['processing_time']:.2f}s")
+
+        print("\n" + "=" * 60)
+        print("ÖNERİ:")
+        print("=" * 60)
+        print("• WITHOUT smoothing: Daha net ama frame geçişlerinde çıt pıt sesleri")
+        print("• WITH smoothing: Daha yumuşak, artifact'lar giderilmiş")
+        print("\n✓ İki dosyayı da dinleyip farkı duyun!")
+        print(f"✓ Dosyalar: {output_dir}/ klasöründe")

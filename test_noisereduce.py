@@ -10,7 +10,7 @@ import noisereduce as nr
 from pathlib import Path
 import time
 
-def clean_with_noisereduce(input_file: str, output_file: str, stationary: bool = True):
+def clean_with_noisereduce(input_file: str, output_file: str, stationary: bool = True, prop_decrease: float = 0.7):
     """
     noisereduce kullanarak ses dosyasını temizle
 
@@ -18,6 +18,8 @@ def clean_with_noisereduce(input_file: str, output_file: str, stationary: bool =
         input_file: Girdi WAV dosyası
         output_file: Çıktı WAV dosyası
         stationary: True ise stationary noise reduction (daha agresif)
+        prop_decrease: Gürültü azaltma oranı (0.0-1.0)
+                      0.5 = Yumuşak, 0.7 = Orta, 1.0 = Agresif
     """
     print(f"[noisereduce] Loading audio: {input_file}")
 
@@ -31,12 +33,12 @@ def clean_with_noisereduce(input_file: str, output_file: str, stationary: bool =
     start_time = time.time()
 
     # Noise reduction uygula
-    print(f"[noisereduce] Applying noise reduction (stationary={stationary})...")
+    print(f"[noisereduce] Applying noise reduction (stationary={stationary}, prop_decrease={prop_decrease})...")
     reduced_noise = nr.reduce_noise(
         y=data,
         sr=rate,
         stationary=stationary,
-        prop_decrease=1.0  # Gürültüyü ne kadar azaltacağız (0.0-1.0)
+        prop_decrease=prop_decrease  # Gürültüyü ne kadar azaltacağız (0.0-1.0)
     )
 
     elapsed = time.time() - start_time
@@ -53,7 +55,8 @@ def clean_with_noisereduce(input_file: str, output_file: str, stationary: bool =
         'sample_rate': rate,
         'duration': len(data) / rate,
         'processing_time': elapsed,
-        'stationary': stationary
+        'stationary': stationary,
+        'prop_decrease': prop_decrease
     }
 
 
@@ -66,35 +69,55 @@ if __name__ == "__main__":
     output_dir.mkdir(exist_ok=True)
 
     print("=" * 60)
-    print("NOISEREDUCE TEST")
+    print("NOISEREDUCE TEST - FARLI PROP_DECREASE DEĞERLERİ")
     print("=" * 60)
 
-    # 1. Stationary mode (varsayılan - daha agresif)
-    print("\n### Test 1: Stationary Mode (Aggressive)")
+    results = []
+
+    # 1. Yumuşak (0.5) - Sesi daha az kısar
+    print("\n### Test 1: Gentle (prop_decrease=0.5)")
     result1 = clean_with_noisereduce(
         input_wav,
-        str(output_dir / "noisereduce_stationary.wav"),
-        stationary=True
+        str(output_dir / "noisereduce_gentle_0.5.wav"),
+        stationary=True,
+        prop_decrease=0.5
     )
+    results.append(result1)
 
-    # 2. Non-stationary mode (daha yumuşak)
-    print("\n### Test 2: Non-Stationary Mode (Gentle)")
+    # 2. Orta (0.7) - Dengeli
+    print("\n### Test 2: Medium (prop_decrease=0.7)")
     result2 = clean_with_noisereduce(
         input_wav,
-        str(output_dir / "noisereduce_nonstationary.wav"),
-        stationary=False
+        str(output_dir / "noisereduce_medium_0.7.wav"),
+        stationary=True,
+        prop_decrease=0.7
     )
+    results.append(result2)
+
+    # 3. Agresif (1.0) - Maksimum temizlik
+    print("\n### Test 3: Aggressive (prop_decrease=1.0)")
+    result3 = clean_with_noisereduce(
+        input_wav,
+        str(output_dir / "noisereduce_aggressive_1.0.wav"),
+        stationary=True,
+        prop_decrease=1.0
+    )
+    results.append(result3)
 
     print("\n" + "=" * 60)
     print("RESULTS SUMMARY")
     print("=" * 60)
-    print(f"\n1. Stationary mode:")
-    print(f"   Output: {result1['output_file']}")
-    print(f"   Time: {result1['processing_time']:.2f}s")
 
-    print(f"\n2. Non-stationary mode:")
-    print(f"   Output: {result2['output_file']}")
-    print(f"   Time: {result2['processing_time']:.2f}s")
+    for i, result in enumerate(results, 1):
+        print(f"\n{i}. prop_decrease={result['prop_decrease']}:")
+        print(f"   Output: {result['output_file']}")
+        print(f"   Time: {result['processing_time']:.2f}s")
 
-    print("\n✓ Her iki dosyayı dinleyip karşılaştırabilirsiniz!")
+    print("\n" + "=" * 60)
+    print("ÖNERİ:")
+    print("=" * 60)
+    print("• 0.5 = En yumuşak, sesi az kısar (daha doğal ama gürültü kalabilir)")
+    print("• 0.7 = Orta seviye (dengeli)")
+    print("• 1.0 = En agresif, sesi çok kısabilir")
+    print("\n✓ Dosyaları dinleyip hangisi daha iyi belirleyin!")
     print(f"✓ Dosyalar: {output_dir}/ klasöründe")
