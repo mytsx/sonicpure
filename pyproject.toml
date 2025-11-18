@@ -57,9 +57,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mehmetyerli/sonicpure"
-Repository = "https://github.com/mehmetyerli/sonicpure"
-"Bug Tracker" = "https://github.com/mehmetyerli/sonicpure/issues"
+Homepage = "https://github.com/mytsx/sonicpure"
+Repository = "https://github.com/mytsx/sonicpure"
+"Bug Tracker" = "https://github.com/mytsx/sonicpure/issues"
 
 [project.scripts]
 sonicpure = "clean_audio:main"

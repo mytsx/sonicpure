@@ -6,10 +6,10 @@
 
 ```bash
 # requirements.txt'e ekle:
-git+ssh://git@github.com/mehmetyerli/sonicpure.git
+git+ssh://git@github.com/mytsx/sonicpure.git
 
 # Veya belirli bir versiyon:
-git+ssh://git@github.com/mehmetyerli/sonicpure.git@v0.1.0
+git+ssh://git@github.com/mytsx/sonicpure.git@v0.1.0
 ```
 
 **Python kodunda:**
@@ -45,7 +45,7 @@ pip install sonicpure
 ```bash
 # 1. GitHub'da public repo oluştur
 # 2. Remote ekle ve push et
-git remote add origin git@github.com:mehmetyerli/sonicpure.git
+git remote add origin git@github.com:mytsx/sonicpure.git
 git push -u origin main
 
 # Tag oluştur (versiyonlama)
@@ -60,7 +60,7 @@ git push origin v0.1.0
 # requirements.txt
 numpy>=1.20.0
 scipy>=1.7.0
-git+ssh://git@github.com/mehmetyerli/sonicpure.git@v0.1.0
+git+ssh://git@github.com/mytsx/sonicpure.git@v0.1.0
 ```
 
 ### Local Development

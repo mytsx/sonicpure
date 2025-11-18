@@ -215,7 +215,7 @@ MIT License - Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
 Mehmet Yerli - iletisim@mehmetyerli.com.tr
 
-Proje Linki: [https://github.com/mehmetyerli/sonicpure](https://github.com/mehmetyerli/sonicpure)
+Proje Linki: [https://github.com/mytsx/sonicpure](https://github.com/mytsx/sonicpure)
 
 ---
 

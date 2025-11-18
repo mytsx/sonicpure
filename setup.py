@@ -29,7 +29,7 @@ setup(
     description="Audio noise reduction and enhancement library with multiple engines",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mehmetyerli/sonicpure",
+    url="https://github.com/mytsx/sonicpure",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
