@@ -114,42 +114,50 @@ class SilenceTrimmer:
 
 
 class AudioNormalizer:
-    """Audio level normalization with compression"""
+    """Audio level normalization with gentle limiting"""
 
-    def soft_knee_compressor(self, audio: np.ndarray, threshold: float = 0.7,
-                            ratio: float = 3.0, knee: float = 0.1) -> np.ndarray:
-        """Soft-knee compressor"""
-        abs_audio = np.abs(audio)
-        compressed = np.zeros_like(audio)
+    def gentle_limiter(self, audio: np.ndarray, threshold: float = 0.95) -> np.ndarray:
+        """
+        Yumuşak limiter - sadece çok yüksek sesleri yumuşakça kısar
+        Tanh-based soft clipping kullanır (analog tarzı)
+        """
+        # Threshold üstündeki sesleri yumuşak kırp
+        limited = np.copy(audio)
 
-        for i, sample in enumerate(audio):
-            abs_sample = abs_audio[i]
+        # Tanh kullanarak yumuşak limiting (analog tarzı saturation)
+        # threshold üstünde olanları smooth bir şekilde kırp
+        mask = np.abs(audio) > threshold
 
-            if abs_sample < (threshold - knee/2):
-                compressed[i] = sample
-            elif abs_sample > (threshold + knee/2):
-                excess = abs_sample - threshold
-                compressed_excess = excess / ratio
-                compressed[i] = np.sign(sample) * (threshold + compressed_excess)
-            else:
-                knee_start = threshold - knee/2
-                knee_range = knee
-                position = (abs_sample - knee_start) / knee_range
+        if np.any(mask):
+            # Tanh function: smooth transition
+            # threshold'da 1.0, sonra yavaşça limitleniyor
+            excess = audio[mask]
+            sign = np.sign(excess)
+            abs_excess = np.abs(excess)
 
-                no_comp = abs_sample
-                excess = abs_sample - threshold
-                full_comp = threshold + excess / ratio
+            # Normalize to threshold, apply tanh, scale back
+            normalized = (abs_excess - threshold) / (1.0 - threshold)
+            limited_value = threshold + (1.0 - threshold) * np.tanh(normalized * 2) / 2
+            limited[mask] = sign * limited_value
 
-                compressed_value = no_comp + position * (full_comp - no_comp)
-                compressed[i] = np.sign(sample) * compressed_value
-
-        return compressed
+        return limited
 
     def normalize(self, input_file: str, output_file: str,
                  target_rms_db: Optional[float] = None,
                  reference_file: Optional[str] = None,
-                 max_peak_db: float = -1.0) -> Dict:
-        """Normalize audio to target RMS level"""
+                 max_peak_db: float = -0.5,
+                 gentle_mode: bool = True) -> Dict:
+        """
+        Yumuşak normalization - pik sesleri önler, doğal ses kalitesini korur
+
+        Args:
+            input_file: Input file
+            output_file: Output file
+            target_rms_db: Target RMS level
+            reference_file: Reference file for RMS
+            max_peak_db: Max peak limit (default: -0.5 dBFS for safety)
+            gentle_mode: Use gentle limiting instead of compression
+        """
 
         print(f"[Normalizer] Loading: {input_file}")
 
@@ -161,6 +169,7 @@ class AudioNormalizer:
         current_peak_db = 20 * np.log10(current_peak) if current_peak > 0 else -np.inf
 
         print(f"[Normalizer] Current RMS: {current_rms_db:.2f} dBFS")
+        print(f"[Normalizer] Current Peak: {current_peak_db:.2f} dBFS")
 
         # Get target RMS
         if reference_file:
@@ -176,45 +185,65 @@ class AudioNormalizer:
         required_gain_db = target_rms_db - current_rms_db
         required_gain_linear = 10 ** (required_gain_db / 20)
 
+        print(f"[Normalizer] Target RMS: {target_rms_db:.2f} dBFS")
         print(f"[Normalizer] Required gain: {required_gain_db:+.2f} dB")
 
-        # Check clipping
+        # Check if gain would cause clipping
         predicted_peak = current_peak * required_gain_linear
+        predicted_peak_db = 20 * np.log10(predicted_peak) if predicted_peak > 0 else -np.inf
         max_peak_linear = 10 ** (max_peak_db / 20)
 
+        # Track actual gain applied
+        actual_gain_db = required_gain_db
+
         if predicted_peak <= max_peak_linear:
+            # No clipping risk - apply gain directly
+            print(f"[Normalizer] Applying gain directly (no clipping risk)")
             normalized = audio * required_gain_linear
         else:
-            print(f"[Normalizer] Using compression to avoid clipping...")
-            compression_threshold = current_peak * 0.7
-            compressed = self.soft_knee_compressor(audio, threshold=compression_threshold, ratio=3.0)
+            # Clipping would occur
+            print(f"[Normalizer] Predicted peak: {predicted_peak_db:.2f} dBFS")
+            print(f"[Normalizer] Max allowed: {max_peak_db:.2f} dBFS")
 
-            compressed_rms = np.sqrt(np.mean(compressed**2))
-            compressed_rms_db = 20 * np.log10(compressed_rms)
+            if gentle_mode:
+                # Gentle approach: reduce gain to avoid clipping, then gentle limit
+                print(f"[Normalizer] Using gentle limiting approach...")
 
-            new_gain_db = target_rms_db - compressed_rms_db
-            new_gain_linear = 10 ** (new_gain_db / 20)
+                # Calculate safe gain (peak reaches max_peak_db)
+                safe_gain_linear = max_peak_linear / current_peak
+                safe_gain_db = 20 * np.log10(safe_gain_linear)
+                actual_gain_db = safe_gain_db
 
-            normalized = compressed * new_gain_linear
+                print(f"[Normalizer] Safe gain: {safe_gain_db:+.2f} dB (no clipping)")
 
-            final_peak = np.max(np.abs(normalized))
-            if final_peak > max_peak_linear:
-                normalized = normalized * (max_peak_linear / final_peak)
+                # Apply safe gain
+                normalized = audio * safe_gain_linear
+
+                # Apply very gentle limiting for safety (only peaks above 0.95)
+                normalized = self.gentle_limiter(normalized, threshold=0.95)
+
+                print(f"[Normalizer] Note: Final RMS will be lower than target to avoid artifacts")
+            else:
+                # Fallback: just limit to max_peak
+                normalized = audio * required_gain_linear
+                normalized = np.clip(normalized, -max_peak_linear, max_peak_linear)
 
         # Save
         print(f"[Normalizer] Saving to: {output_file}")
         sf.write(output_file, normalized, rate)
 
         final_rms = np.sqrt(np.mean(normalized**2))
-        final_rms_db = 20 * np.log10(final_rms)
+        final_rms_db = 20 * np.log10(final_rms) if final_rms > 0 else -np.inf
         final_peak = np.max(np.abs(normalized))
-        final_peak_db = 20 * np.log10(final_peak)
+        final_peak_db = 20 * np.log10(final_peak) if final_peak > 0 else -np.inf
 
         print(f"[Normalizer] Final RMS: {final_rms_db:.2f} dBFS")
+        print(f"[Normalizer] Final Peak: {final_peak_db:.2f} dBFS")
 
         return {
             'original_rms_db': current_rms_db,
             'target_rms_db': target_rms_db,
             'final_rms_db': final_rms_db,
-            'final_peak_db': final_peak_db
+            'final_peak_db': final_peak_db,
+            'gain_applied_db': actual_gain_db
         }
