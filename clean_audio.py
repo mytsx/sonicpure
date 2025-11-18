@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gürültü - Clean Audio CLI
+SonicPure - Clean Audio CLI
 
 Basit kullanım:
     python clean_audio.py input.wav output.wav
@@ -11,12 +11,12 @@ Basit kullanım:
 
 import argparse
 from pathlib import Path
-from gurultu import AudioPipeline
+from sonicpure import AudioPipeline
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Gürültü - Audio noise reduction and enhancement',
+        description='SonicPure - Audio noise reduction and enhancement',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
